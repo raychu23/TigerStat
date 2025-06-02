@@ -1,0 +1,186 @@
+using UnityEngine;
+using System.Collections;
+using System;
+using System.Collections.Generic;
+
+/// Script basics
+/// Each level will have two things that make the level end
+///     Either enough tiger data captured or a time limit
+/// This script has a running timer and also receives reports of when tiger data was collected
+/// It doesn't acutally have any data from the tigers, just that they were accounted for
+/// If either end condition is met, pop up a window and stop player input
+
+public class TigerReport : MonoBehaviour
+{
+    public static int reportCount;
+    public static ArrayList tNum = new ArrayList();
+    public static List<TigerData> tList = new List<TigerData>();
+    public int timeLimit;
+    public int tigerLimit;
+
+    void OnEnable()
+    {
+        dataSent = false;
+        Cursor.visible = false;
+        //Screen.lockCursor = true;
+        Cursor.lockState = CursorLockMode.Locked;
+        reportCount = 0;
+        tNum = new ArrayList();
+        tList = new List<TigerData>();
+        StartCoroutine("EndConditionCheck");
+    }
+
+    private IEnumerator EndConditionCheck()
+    {
+        while (true)
+        {
+            if (Time.timeSinceLevelLoad > timeLimit)
+            {
+                EndScene(0);
+                //times up!
+                break;
+            }
+
+            if (reportCount >= tigerLimit)
+            {
+                EndScene(1);
+                //tigers are data-fied!
+                break;
+            }
+
+            yield return false;
+        }
+    }
+
+    public static void DataCollected(int foo)
+    {
+        tNum.Add(foo);
+        reportCount++;
+
+
+        TigerData t1 = new TigerData();
+
+        for (int i = 0; i < TigerDataHolder.CurData().categories.Count; i++)
+        {
+            t1.setData(
+                TigerDataHolder.CurData().categories[i],
+                TigerDataHolder.CurData().GetTigerStatAsNiceData(i, foo, true)
+                );
+        }
+
+        tList.Add(t1);
+    }
+
+    private void EndScene(int foo)
+    {
+        HUD2.This().endState = 1;
+<<<<<<< local
+=======
+        
+>>>>>>> other
+        InputControl.isPaused = true;
+        Time.timeScale = 0;
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        // threw this in here too
+        HUD2.This().FinishMissionScreen(foo);
+    }
+
+    public void FinishScene(bool sendData)
+    {
+
+        if (sendData)
+        {
+            StartCoroutine("SendData");
+        }
+        else
+        {
+            Time.timeScale = 1;
+            Application.LoadLevel(1);
+        }
+    }
+
+    private IEnumerator SendData()
+    {
+        if (Application.loadedLevel != 1)
+        {
+            dataSent = false;
+            ReportData();
+
+            while (!dataSent)
+            {
+                yield return false;
+            }
+        }
+
+        Time.timeScale = 1;
+        Application.LoadLevel(1);
+    }
+
+    private void ReportData()
+    {
+        ServiceConnection.This().UploadData(
+            MasterObj.GetPlayerName(),  // name
+            MasterObj.GetClassName(),   // class name
+            Mathf.RoundToInt(Time.timeSinceLevelLoad),// time played
+            MasterObj.GetDifficulty(),  // difficulty
+            PlayerData.GetShots(),      // shots fired
+            PlayerData.GetHits(),       // shots hit
+            reportCount,                // tigers tagged
+            PlayerData.GetDist(),       // distance walked
+            tList); // tiger list
+    }
+
+    //private static string serviceURL = "http://hall-mathew.tietronix.com/TigerStat/addreport.php";
+
+    private WWW servReq;
+
+    public static bool dataSent;
+
+    //public void UploadData(string playerName, string className, int timePlayed,
+    //    int levelPlayed, int shotsFired, int tigersHit, int tigersTagged,
+    //    int distanceTraveled, TigerDataSet tigerData)
+    //{
+    //    WWWForm form = new WWWForm();
+    //    form.AddField("MAKEMAGICHAPPEN", "yesThisMustBeSent");
+    //    form.AddField("playerName", playerName);
+    //    form.AddField("className", className);
+    //    form.AddField("timePlayed", timePlayed);
+    //    form.AddField("levelPlayed", levelPlayed);
+    //    form.AddField("shotsFired", shotsFired);
+    //    form.AddField("tigersHit", tigersHit);
+    //    form.AddField("tigersTagged", tigersTagged);
+    //    form.AddField("distanceTraveled", distanceTraveled);
+
+    //    for (int tNum = 0; tNum < tigersTagged; tNum++)
+    //    {
+    //        for (int cNum = 0; cNum < TigerDataHolder.CurData().categories.Length; cNum++)
+    //        {
+    //            form.AddField(
+    //                TigerDataHolder.CurData().ProperCategory(cNum),
+    //                TigerDataHolder.CurData().GetTigerStatAsNiceData(cNum, tNum, true)
+    //                );
+    //        }
+    //    }
+
+    //    servReq = new WWW(urlLocations.serviceURL, form);
+    //    StartCoroutine(WaitForRequest(servReq));
+    //}
+
+    IEnumerator WaitForRequest(WWW www)
+    {
+        yield return www;
+
+        if (www.error == null)
+        {
+            Debug.Log("Submitted!" + www.text);
+        }
+        else
+        {
+            Debug.Log("FAILED: " + www.error);
+        }
+
+        dataSent = true;
+    }
+}

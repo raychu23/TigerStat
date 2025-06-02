@@ -1,0 +1,2 @@
+serviceurl,http://statgamesstaging.tietronix.com/tigerstat/addreport.php
+webreporterurl,http://statgamesstaging.tietronix.com/tigerstat/webreporter.php

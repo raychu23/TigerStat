@@ -1,0 +1,183 @@
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+
+public class TigerDataHolder : MonoBehaviour
+{
+    public static TigerDataSet[] dataSet;
+    private static int curSet;
+    public static bool initialized = false;
+
+    void Start()
+    {
+        initialized = false;
+        DontDestroyOnLoad(this.gameObject);
+        curSet = 0;
+        dataSet = new TigerDataSet[] {
+            GetDataSet("TigerData01"),
+			GetDataSet("TigerData02")
+			//DataSet3()
+        };
+        initialized = true;
+    }
+
+    public static void SetData(int foo)
+    {
+        if (dataSet.Length < foo)
+        {
+            Debug.LogError("Data number doesn't exist!");
+            curSet = 0;
+        }
+        curSet = foo;
+    }
+
+    public static TigerDataSet CurData()
+    {
+        return dataSet[curSet];
+    }
+
+    public static int TotalDataSets()
+    {
+        return dataSet.Length;
+    }
+
+	private TigerDataSet GetDataSet(string dataName)
+	{
+		TextAsset dataToLoad = (TextAsset)Resources.Load("TigerData/" + dataName); // Load the tigerData from resources 
+
+		return DeserializeCSV(dataToLoad);
+	}
+
+	/// <summary>
+	/// Deserializes the CSV file that contains dialogue.
+	/// </summary>
+	/// <param name="textToDeserialize">The dialogue text to deserialize.</param>
+	public TigerDataSet DeserializeCSV(TextAsset textToDeserialize)
+	{
+		//Split the file from the new line character
+		var csvFileContents = textToDeserialize.text.Split ('\n');
+
+		//empty tiger data set to hold data
+		List<string> categories = new List<string>();
+		List<Vector2> gDat = new List<Vector2>();
+		List<List<double>> dat = new List<List<double>>();
+
+		int counter = 0;
+
+		//Iterate through the text array 
+		foreach(string dataElement in csvFileContents)
+		{
+			if(dataElement != "")
+			{
+				//Split the dialogue element by tabs 
+				var dataValues = dataElement.Split('\t');
+
+
+
+				// error handling
+<<<<<<< local
+				if (dataValues[0] == "") break;
+=======
+				if (dataValues.Length == 1) break;
+				if (dataValues[0] == "" && dataValues[1] == "" && dataValues[2] == "") break;
+>>>>>>> other
+
+
+				// if this is our first row, it is our categories
+				// CREATE CATEGORIES FROM THIS DATA
+				if (counter == 0) 
+				{
+					foreach (string category in dataValues)
+					{
+						if (category != "")
+							categories.Add(category.Trim());
+					}
+				}
+
+				// otherwise, we are creating our data
+				// CREATE TIGERDATA FROM THIS DATA
+				else
+				{
+					List<double> tempDataHolder = new List<double>();
+
+					foreach (string data in dataValues)
+					{
+<<<<<<< local
+						tempDataHolder.Add(double.Parse(data));
+=======
+						string fixedData = data.Trim();
+						if (fixedData == "Female")
+							tempDataHolder.Add(0);
+						else if (fixedData == "Male")
+							tempDataHolder.Add(1);
+						else if (fixedData == "")
+							tempDataHolder.Add(-500);
+						else
+						{
+							tempDataHolder.Add(double.Parse(fixedData));
+						}
+>>>>>>> other
+					}
+
+					dat.Add(tempDataHolder);
+				}
+			}
+
+			counter++;
+		}
+
+		// before we are done, make our graph data (in a stupid way! fix this later)
+
+		gDat = new List<Vector2>();
+<<<<<<< local
+		int curYGraph = 0;
+		int curXGraph = 1;
+=======
+		int curYGraph = 1;
+		int curXGraph = 2;
+>>>>>>> other
+
+		// example of what this does
+		// makes 4 sets of graphs
+		// if we have 4 categories, it should make:
+		// 0,1		0,2		0,3		1,2
+		// 
+		// if we have 6 categories, it should make:
+		// 0,1		0,2		0,3		0,4
+		//
+		// if we have 3 categories, it should make: JEFF NOTE, THIS WOULD BREAK EVERYTHING
+		// 0,1		0,2		1,2		ERROR
+
+
+		for (int graphCount = 0; graphCount < 4; graphCount++)
+		{
+			if (curXGraph < categories.Count)
+			{
+				gDat.Add(new Vector2(curXGraph, curYGraph));
+				curXGraph++;
+			}
+			else
+			{
+				curYGraph++;
+				curXGraph = curYGraph+1;
+				gDat.Add(new Vector2(curXGraph, curYGraph));
+			}
+		}
+
+		return new TigerDataSet(categories, gDat, dat);
+	}
+
+    public static string NOSE_BLACK_NAME = "NoseBlack";
+    public static string PAW_CIRC_NAME = "PawCircumference";
+<<<<<<< local
+    public static string SIZE_NAME = "Size";
+=======
+    public static string LENGTH_NAME = "Length";
+>>>>>>> other
+    public static string REGION_NAME = "Region";
+    public static string SEX_NAME = "Sex";
+    public static string AGE_NAME = "Age";
+    public static string WEIGHT_NAME = "Weight";
+    public static string TAIL_LENGTH_NAME = "TailLength";
+	
+}
